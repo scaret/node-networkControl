@@ -10,25 +10,25 @@ Currently IPv4 only
 ## TODO
 
 - Windows
-	- getInfo()
-		-networkInterfaces
-			- ipAddress
-			- netmask
-			- gateway
-			- dns
-			- mac
-			- adapterType
-			- adapterName
-			- interfaceName
-			- interfaceIndex
-			- ipconfigType (static, dhcp, mobile)
-			- enabled
-			- connected
-		-routeTable
-			- destination
-			- netmask
-			- gateway
-			- interfaceAddress
-			- interface
-			- metric
-		-default
+    - getInfo()
+        - networkInterfaces
+            - ipAddress
+            - netmask
+            - gateway
+            - dns
+            - mac
+            - adapterType
+            - adapterName
+            - interfaceName
+            - interfaceIndex
+            - ipconfigType (static, dhcp, mobile)
+            - enabled
+            - connected
+        - routeTable
+            - destination
+            - netmask
+            - gateway
+            - interfaceAddress
+            - interface
+            - metric
+        - default
