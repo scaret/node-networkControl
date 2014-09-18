@@ -196,6 +196,7 @@ var getInfo = function (callback)
 {
 	var info = {hostName: null, networkInterfaces: [], routeTable: [], default: null};
 	execIpconfigAll(function(result){
+		var interfaceDict = {};
 		for (var key in result)
 		{
 			var item = result[key];
@@ -235,6 +236,7 @@ var getInfo = function (callback)
 					connected: true
 				};
 				info.networkInterfaces.push(interfaceObj);
+				interfaceDict[interfaceObj.ipAddress] = interfaceObj;
 			}
 		}
 		execRoutePrint4(function(routeInfo){
@@ -255,6 +257,7 @@ var getInfo = function (callback)
 					netmask: routeItem['Netmask'],
 					gateway: routeItem['Gateway'],
 					interfaceAddress: routeItem['Interface'],
+					interfaceName: interfaceDict[routeItem['Interface']] && interfaceDict[routeItem['Interface']].interfaceName,
 					metric: parseInt(routeItem['Metric']),
 				}
 				info.routeTable.push(item);

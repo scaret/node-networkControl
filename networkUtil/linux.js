@@ -141,7 +141,7 @@ var getInfo = function(callback){
 				execDone('cat /etc/resolv.conf | grep nameserver', function(stdoutLines){
 					info.default.dns = [];
 					for (var i = 0; i < stdoutLines.length; i++){
-						var dnsAddress = stdoutLines.match(/([\d\.]+)/) ? stdoutLines[i].match(/([\d\.]+)/)[0] : null;
+						var dnsAddress = stdoutLines[i].match(/([\d\.]+)/) ? stdoutLines[i].match(/([\d\.]+)/)[0] : null;
 						info.default.dns.push(dnsAddress);
 					}
 					callback(info);
