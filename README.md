@@ -7,11 +7,30 @@ It will rely on the command-line output, so to make sure this project can work, 
 
 Currently IPv4 only
 
-## TODO
-
 - Windows
     - getInfo()
+        - hostname
         - networkInterfaces
+            - ipAddress (if connected)
+            - netmask (if connected)
+            - gateway (if connected)
+            - dns (if connected)
+            - mac
+            - adapterType
+            - adapterName
+            - interfaceName
+            - isDhcp
+            - enabled
+            - connected
+            - interfaceIndex
+        - routeTable
+            - destination
+            - netmask
+            - gateway
+            - interfaceAddress
+            - interfaceName
+            - metric
+        - default (if has default gateway)
             - ipAddress
             - netmask
             - gateway
@@ -20,15 +39,38 @@ Currently IPv4 only
             - adapterType
             - adapterName
             - interfaceName
+            - isDhcp
+            - enabled
+            - connected
             - interfaceIndex
-            - ipconfigType (static, dhcp, mobile)
+            - metric
+
+- Linux
+    - getInfo
+        - hostname
+        - networkInterfaces
+            - ipAddress (if connected)
+            - netmask (if connected)
+            - mac
+            - adapterType
+            - interfaceName
             - enabled
             - connected
         - routeTable
             - destination
-            - netmask
             - gateway
+            - netmask
+            - interfaceName
             - interfaceAddress
-            - interface
             - metric
         - default
+            - ipAddress
+            - netmask
+            - mac
+            - adapterType
+            - interfaceName
+            - enabled
+            - connected
+            - gateway
+            - metric
+            - dns
