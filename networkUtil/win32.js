@@ -14,6 +14,11 @@ var execDone = function (cmd, callback)
 	});
 };
 
+var formatMacAddress = function(str)
+{
+	return str.replace(/[\- :]/g,'-').toUpperCase();
+};
+
 var execIpconfigAll = function(callback){
 	execDone('ipconfig /all', function(stdoutLines){
 		var stdoutInterfaceInfo = {global:{keyValue:{}}, unparsedLines:[]}
@@ -59,6 +64,25 @@ var execIpconfigAll = function(callback){
 var execNetshInterfaceIpv4ShowInterfaces = function(callback)
 {
 	execDone('netsh interface ipv4 show interfaces', function(stdoutLines){
+		var interfaces = [];
+		var keys = stdoutLines[1].trim().split(/[ ]{2,80}/);
+		for (var i = 3;i < stdoutLines.length -2; i++)
+		{
+			var values = stdoutLines[i].trim().split(/[ ]{2,80}/);
+			var item = {};
+			for (var j = 0; j < values.length; j++)
+			{
+				item[keys[j]] = values[j];
+			}
+			interfaces.push(item);
+		}
+		callback(interfaces);
+	});
+};
+
+var execNetshInterfaceShowInterface = function(callback)
+{
+	execDone('netsh interface show interface', function(stdoutLines){
 		var interfaces = [];
 		var keys = stdoutLines[1].trim().split(/[ ]{2,80}/);
 		for (var i = 3;i < stdoutLines.length -2; i++)
@@ -146,12 +170,11 @@ var execRoutePrint4 = function (callback)
 				if (match)
 				{
 					var interface = {
-						"if": match[1],
+						interfaceIndex: match[1],
 						macAddress: match[2],
 						deviceName : match[3]
 					};
 					info.interfaceList.push(interface);
-					console.log(interface);
 				}
 			}
 			if (activeRouteFlag)
@@ -169,7 +192,110 @@ var execRoutePrint4 = function (callback)
 	});
 };
 
+var getInfo = function (callback)
+{
+	var info = {hostName: null, networkInterfaces: [], routeTable: [], default: {}};
+	execIpconfigAll(function(result){
+		for (var key in result)
+		{
+			var item = result[key];
+			if (key == 'global')
+			{
+				info.hostName = item.keyValue['Host Name'];
+			}
+			else
+			if (item.keyValue['Media State'] == 'Media disconnected')
+			{
+				var interfaceObj =
+				{
+					mac: item.keyValue['Physical Address'],
+					adapterType: item.adapterType,
+					adapterName: item.keyValue['Description'],
+					interfaceName: item.interfaceName,
+					ipconfigType: item.keyValue['DHCP Enabled'] == 'Yes' ? 'dhcp' : 'not dhcp',
+					enabled: true,
+					connected: false
+				};
+				info.networkInterfaces.push(interfaceObj);
+			}
+			else
+			{
+				var interfaceObj =
+				{
+					ipAddress: item.keyValue['IPv4 Address'].match(/[0-9\.]*/) && item.keyValue['IPv4 Address'].match(/[0-9\.]*/)[0],
+					netmask: item.keyValue['Subnet Mask'],
+					gateway: item.keyValue['Default Gateway'],
+					dns: item.keyValue['DNS Servers'],
+					mac: item.keyValue['Physical Address'],
+					adapterType: item.adapterType,
+					adapterName: item.keyValue['Description'],
+					interfaceName: item.interfaceName,
+					ipconfigType: item.keyValue['DHCP Enabled'] == 'Yes' ? 'dhcp' : 'not dhcp',
+					enabled: true,
+					connected: true
+				};
+				info.networkInterfaces.push(interfaceObj);
+			}
+		}
+		execRoutePrint4(function(routeInfo){
+			for (var i in routeInfo.interfaceList){
+				for(var j in info.networkInterfaces){
+					if (routeInfo.interfaceList[i].macAddress && formatMacAddress(routeInfo.interfaceList[i].macAddress) == formatMacAddress(info.networkInterfaces[j].mac)){
+						info.networkInterfaces[j].interfaceIndex = parseInt(routeInfo.interfaceList[i].interfaceIndex);
+					}
+				}
+			}
+			var defaultRoute = {metric: 999};
+			for (var i in routeInfo.activeRoutes)
+			{
+				var routeItem = routeInfo.activeRoutes[i];
+				var item =
+				{
+					destination: routeItem['Network Destination'],
+					netmask: routeItem['Netmask'],
+					gateway: routeItem['Gateway'],
+					interfaceAddress: routeItem['Interface'],
+					metric: parseInt(routeItem['Metric']),
+				}
+				info.routeTable.push(item);
+				if (item.metric < defaultRoute.metric && item.destination == "0.0.0.0")
+				{
+					defaultRoute = item;
+				}
+			}
+			for (var i in info.networkInterfaces)
+			{
+				if (info.networkInterfaces[i].ipAddress == defaultRoute.interfaceAddress)
+				{
+					info.default = JSON.parse(JSON.stringify(info.networkInterfaces[i]));
+					info.default.netmask = defaultRoute.netmask;
+					info.default.gateway = defaultRoute.gateway;
+					info.default.metric  = defaultRoute.metric;
+				}
+			}
+			execNetshInterfaceShowInterface(function(interfaces){
+				for (var i in interfaces)
+				{
+					var the_interface = interfaces[i];
+					if (the_interface['Admin State'] != 'Enabled')
+					{
+						var interfaceObj =
+						{
+							interfaceName: the_interface['Interface Name'],
+							enabled: false,
+							connected: false
+						}
+						info.networkInterfaces.push(interfaceObj);
+					}
+				}
+				callback(info);
+			});
+		});
+	});
+};
+
 module.exports.execIpconfigAll = execIpconfigAll;
 module.exports.execNetshInterfaceIpv4ShowInterfaces = execNetshInterfaceIpv4ShowInterfaces;
 module.exports.execNetshMbnShowInterfaces = execNetshMbnShowInterfaces;
 module.exports.execRoutePrint4 = execRoutePrint4;
+module.exports.getInfo = getInfo;
