@@ -194,7 +194,7 @@ var execRoutePrint4 = function (callback)
 
 var getInfo = function (callback)
 {
-	var info = {hostName: null, networkInterfaces: [], routeTable: [], default: {}};
+	var info = {hostName: null, networkInterfaces: [], routeTable: [], default: null};
 	execIpconfigAll(function(result){
 		for (var key in result)
 		{
@@ -212,7 +212,7 @@ var getInfo = function (callback)
 					adapterType: item.adapterType,
 					adapterName: item.keyValue['Description'],
 					interfaceName: item.interfaceName,
-					ipconfigType: item.keyValue['DHCP Enabled'] == 'Yes' ? 'dhcp' : 'not dhcp',
+					isDhcp: item.keyValue['DHCP Enabled'] == 'Yes',
 					enabled: true,
 					connected: false
 				};
@@ -230,7 +230,7 @@ var getInfo = function (callback)
 					adapterType: item.adapterType,
 					adapterName: item.keyValue['Description'],
 					interfaceName: item.interfaceName,
-					ipconfigType: item.keyValue['DHCP Enabled'] == 'Yes' ? 'dhcp' : 'not dhcp',
+					isDhcp: item.keyValue['DHCP Enabled'] == 'Yes',
 					enabled: true,
 					connected: true
 				};
@@ -265,7 +265,7 @@ var getInfo = function (callback)
 			}
 			for (var i in info.networkInterfaces)
 			{
-				if (info.networkInterfaces[i].ipAddress == defaultRoute.interfaceAddress)
+				if (info.networkInterfaces[i].ipAddress == defaultRoute.interfaceAddress && info.networkInterfaces[i].connected)
 				{
 					info.default = JSON.parse(JSON.stringify(info.networkInterfaces[i]));
 					info.default.netmask = defaultRoute.netmask;
