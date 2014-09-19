@@ -6,11 +6,11 @@ var exec = global.debug ? function(cmd, callback){
 } :cp.exec;
 var execDone = function (cmd, callback)
 {
-	exec(cmd, function(err, stdout, stderr){
+	exec("chcp 65001 &&" +cmd, function(err, stdout, stderr){
 		if (err && stderr)
 			callback(err, stdout + stderr);
 		else
-			callback(stdout.split('\r\n')); 
+			callback(stdout.split('\r\n').slice(1));
 	});
 };
 
@@ -223,7 +223,7 @@ var getInfo = function (callback)
 			{
 				var interfaceObj =
 				{
-					ipAddress: item.keyValue['IPv4 Address'].match(/[0-9\.]*/) && item.keyValue['IPv4 Address'].match(/[0-9\.]*/)[0],
+					ipAddress: item.keyValue['IPv4 Address'] && item.keyValue['IPv4 Address'].match(/[0-9\.]*/) && item.keyValue['IPv4 Address'].match(/[0-9\.]*/)[0],
 					netmask: item.keyValue['Subnet Mask'],
 					gateway: item.keyValue['Default Gateway'],
 					dns: item.keyValue['DNS Servers'],
